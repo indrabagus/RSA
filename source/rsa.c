@@ -73,6 +73,20 @@ mersenne_twister_extract(mpz_t res){
 /* --------- Mersenne Twister End Here ------------ */
 
 
+void rsa_genkey(){
+/* pick two number (p and q ) */
+/* calculate n = p* q */
+    /* calculate z = (p-1) * ( q - 1) */
+    /* choose k, such that k is co-prime to z, i.e z is not divisible by k */
+    /* calculate j for ( k * j ) mod z = 1 */
+    /* then we have publick key = [n,k] and private key [j] */
+}
+
+void rsa_encrypt(Data P ){
+    /* let the encrypt function be 
+        E = (P ^ k) mod n */
+}
+
 int main()
 {
     static mpz_t result;
