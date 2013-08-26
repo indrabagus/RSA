@@ -1,5 +1,15 @@
-#include "mini-gmp.h"
+#include <gmp.h>
 #include <stdio.h>
+
+typedef struct internalrsa{
+    mpz_t p;
+    mpz_t q;
+    mpz_t n;
+    mpz_t z;
+    mpz_t k;
+}privattrib_t,*PPRIVATEATTRIB;
+
+#define HANDLE2PRIVATTRIB(handle) ((PPRIVATEATTRIB)handle)
 
 static mpz_t hbigint;
 
@@ -7,70 +17,6 @@ static mpz_t hbigint;
 static mpz_t MT[624];
 static int index;
 
-static void 
-mersenne_twister_init(mpz_t seed){
-    int i;
-    index = 0;
-    mpz_array_init(MT[0],624,1024);
-    mpz_set(MT[0],seed);
-    for(i=1;i<624;++i){
-        mpz_tdiv_q_2exp(MT[i],MT[i-1],30);
-        mpz_xor (MT[i], MT[i], MT[i-1]);
-        mpz_mul_ui(MT[i],MT[i],1812433253);
-        mpz_add_ui(MT[i],MT[i],1);
-    }
-
-}
-
-static void
-merstwister_init(mpz_t op,const mpz_t prev){
-    int idx;
-    // TODO check jumlah limb kedua ini harus sama
-
-    for(idx=0;idx < op->_mp_size;++idx){
-        mpn_rshift (&op->_mp_d[idx], &op->_mp_d[idx], sizeof(mp_limb_t), 30);
-    }
-}
-
-static void
-randominit(mpz_t seed){
-    int i;
-    index = 0;
-    mpz_array_init(MT[0],624,1024);
-    mpz_set(MT[0],seed);
-    for(i=1;i<624;++i){
-        merstwister_init(MT[i],MT[i-1]);
-    }
-}
-
-
-
-
-/*
- // Generate an array of 624 untempered numbers
- function generate_numbers() {
-     for i from 0 to 623 {
-         int y := (MT[i] & 0x80000000)                       // bit 31 (32nd bit) of MT[i]
-                        + (MT[(i+1) mod 624] & 0x7fffffff)   // bits 0-30 (first 31 bits) of MT[...]
-         MT[i] := MT[(i + 397) mod 624] xor (right shift by 1 bit(y))
-         if (y mod 2) != 0 { // y is odd
-             MT[i] := MT[i] xor (2567483615) // 0x9908b0df
-         }
-     }
- }
-
-*/
-static void
-mersenne_twister_gennumber(void){
-    mpz_t mask1;
-    mpz_t mask2;
-}
-
-static void
-mersenne_twister_extract(mpz_t res){
-}
-
-/* --------- Mersenne Twister End Here ------------ */
 
 
 void rsa_genkey(){
@@ -79,12 +25,17 @@ void rsa_genkey(){
     /* calculate z = (p-1) * ( q - 1) */
     /* choose k, such that k is co-prime to z, i.e z is not divisible by k */
     /* calculate j for ( k * j ) mod z = 1 */
-    /* then we have publick key = [n,k] and private key [j] */
+    /* then we have publick key = [n,k] and private key [n,j] */
 }
 
 void rsa_encrypt(Data P ){
     /* let the encrypt function be 
         E = (P ^ k) mod n */
+}
+
+void rsa_decrypt(Data Encr ) {
+    /* Let the decryption function be
+        P = (Encr ^ j) mode n*/
 }
 
 int main()
