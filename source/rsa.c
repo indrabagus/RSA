@@ -23,7 +23,8 @@ void rsa_genkey(){
 /* pick two number (p and q ) */
 /* calculate n = p* q */
     /* calculate z = (p-1) * ( q - 1) */
-    /* choose k, such that k is co-prime to z, i.e z is not divisible by k */
+    /* choose k, such that k is co-prime to z, i.e z is not divisible by k 
+       or in other word gcd(k,z) = 1 */
     /* calculate j for ( k * j ) mod z = 1 */
     /* then we have publick key = [n,k] and private key [n,j] */
 }
