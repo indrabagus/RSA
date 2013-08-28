@@ -1,6 +1,5 @@
 #include <gmp.h>
 #include <stdio.h>
-#include <windows.h>
 
 #pragma comment(linker,"/NODEFAULTLIB:LIBC");
 
