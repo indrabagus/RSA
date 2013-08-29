@@ -1,7 +1,8 @@
 #include <gmp.h>
 #include <stdio.h>
+#include "rsa.h"
 
-#pragma comment(linker,"/NODEFAULTLIB:LIBC");
+//#pragma comment(linker,"/NODEFAULTLIB:LIBC");
 
 #define PRIMESIZE   (BITSTRENGTH / 2)
 
@@ -20,9 +21,9 @@ typedef struct internalrsa {
 handle_t 
 rsa_initialize(void){
     PPRIVATEATTRIB phandle = (PPRIVATEATTRIB)malloc(sizeof(privattrib_t));
-    gmp_randinit_default(phandle->hrandstate)
+    gmp_randinit_default(phandle->hrandstate);
     mpz_init2(phandle->p,PRIMESIZE);
-    mpz_init(phandle->q,PRIMESIZE);
+    mpz_init2(phandle->q,PRIMESIZE);
     mpz_init(phandle->n);
     mpz_init(phandle->z);
     mpz_init(phandle->k);
@@ -42,7 +43,7 @@ rsa_closehandle(handle_t h){
 }
 
 int 
-rsa_createkey(handle_t handle,PRSAKEY_T key){
+rsa_createkey(handle_t handle,PRSAKEY key){
     /* inisialisasi variabel helper */
     mpz_t pminus;
     mpz_t qminus;
@@ -65,7 +66,7 @@ rsa_createkey(handle_t handle,PRSAKEY_T key){
        or in other word gcd(k,z) = 1 */
     while(1){
         mpz_gcd_ui(gcd,HANDLE2PRIVATTRIB(handle)->z,k_int);
-        if(mpz_comp_ui(gcd,(unsigned long)1) == 0)
+        if(mpz_cmp_ui(gcd,(unsigned long)1) == 0)
             break;
         k_int +=2;
     }
@@ -79,32 +80,34 @@ rsa_createkey(handle_t handle,PRSAKEY_T key){
     /* clear up everything */
     mpz_clear(pminus);
     mpz_clear(qminus);
-}
-
-void rsa_encrypt(Data P ){
-    /* let the encrypt function be 
-        E = (P ^ k) mod n */
-}
-
-void rsa_decrypt(Data Encr ) {
-    /* Let the decryption function be
-        P = (Encr ^ j) mode n*/
-}
-
-int main()
-{
-    static mpz_t result;
-    int idx;
-    mpz_init2(hbigint,1024);
-    mpz_set_str(hbigint,"c00ffec00ffec00ffec00ffec00ffec00ffec00ffec00ffec00ffec00ffec00ffec00ffe",16);
-    mpz_mul_ui(result,hbigint,0xDFDFAAAA);
-    printf("BIG Integer : %s\n",mpz_get_str(NULL,16,result));
-    printf("Allocated limb : %d,%d\n",hbigint->_mp_alloc,hbigint->_mp_size);
-    for(idx = 0 ; idx < hbigint->_mp_alloc ; ++idx){
-        printf("limb[%d] = %X \n",idx,hbigint->_mp_d[idx]);
-    }
-    mpz_clear(hbigint);
-    mpn_rshift (&hbigint->_mp_d[8], &hbigint->_mp_d[8], sizeof(mp_limb_t), 2);
-    printf("limb[8] = %X \n",hbigint->_mp_d[8]);
+    
     return 0;
 }
+
+//void rsa_encrypt(Data P ){
+//    /* let the encrypt function be 
+//        E = (P ^ k) mod n */
+//}
+//
+//void rsa_decrypt(Data Encr ) {
+//    /* Let the decryption function be
+//        P = (Encr ^ j) mode n*/
+//}
+
+//int main()
+//{
+//    static mpz_t result;
+//    int idx;
+//    mpz_init2(hbigint,1024);
+//    mpz_set_str(hbigint,"c00ffec00ffec00ffec00ffec00ffec00ffec00ffec00ffec00ffec00ffec00ffec00ffe",16);
+//    mpz_mul_ui(result,hbigint,0xDFDFAAAA);
+//    printf("BIG Integer : %s\n",mpz_get_str(NULL,16,result));
+//    printf("Allocated limb : %d,%d\n",hbigint->_mp_alloc,hbigint->_mp_size);
+//    for(idx = 0 ; idx < hbigint->_mp_alloc ; ++idx){
+//        printf("limb[%d] = %X \n",idx,hbigint->_mp_d[idx]);
+//    }
+//    mpz_clear(hbigint);
+//    mpn_rshift (&hbigint->_mp_d[8], &hbigint->_mp_d[8], sizeof(mp_limb_t), 2);
+//    printf("limb[8] = %X \n",hbigint->_mp_d[8]);
+//    return 0;
+//}
