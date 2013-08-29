@@ -1,6 +1,13 @@
+#Folder
+Debug
+Release
+ipch
+
+#intermediate vcproject
+*.vcxproj.*
 #intermediate file
 *.obj
-
+*.opensdf
 # Shared objects (inc. Windows DLLs)
 *.dll
 
