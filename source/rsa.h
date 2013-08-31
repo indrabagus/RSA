@@ -1,3 +1,13 @@
+/***************************************************************************
+                
+RSA Key generator, Encryption and Decryption 
+
+authors        : Indra Bagus Wicaksono <indra.bagus@gmail.com>
+                                       <indra@xirkachipset.com>
+              
+*****************************************************************************/
+
+
 #ifndef RSA_H
 #define RSA_H
 #ifdef __cplusplus

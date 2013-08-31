@@ -44,8 +44,6 @@ rsa_closehandle(handle_t h){
     free(HANDLE2PRIVATTRIB(h));
 }
 
-    static char strtemp[2048];
-
 
 int 
 rsa_createkey(handle_t handle,PRSAKEY pkey){
@@ -63,10 +61,6 @@ rsa_createkey(handle_t handle,PRSAKEY pkey){
     gmp_randseed_ui(HANDLE2PRIVATTRIB(handle)->hrandstate,GetTickCount());
     mpz_urandomb(HANDLE2PRIVATTRIB(handle)->q,HANDLE2PRIVATTRIB(handle)->hrandstate,PRIMESIZE);
     mpz_nextprime(HANDLE2PRIVATTRIB(handle)->q,HANDLE2PRIVATTRIB(handle)->q);
-    mpz_get_str(strtemp,16,HANDLE2PRIVATTRIB(handle)->p);
-    printf("RandomP=%s\n\n",strtemp);
-    mpz_get_str(strtemp,16,HANDLE2PRIVATTRIB(handle)->q);
-    printf("RandomQ=%s\n\n",strtemp);
     /* calculate n = (p * q) */
     mpz_mul(HANDLE2PRIVATTRIB(handle)->n,HANDLE2PRIVATTRIB(handle)->q,HANDLE2PRIVATTRIB(handle)->p);
     /* calculate z = (p-1) * ( q - 1) */
@@ -77,7 +71,6 @@ rsa_createkey(handle_t handle,PRSAKEY pkey){
        or in other word gcd(k,z) = 1 */
     while(1){
         mpz_gcd_ui(gcd,HANDLE2PRIVATTRIB(handle)->z,k_int);
-        mpz_get_str(strtemp,16,gcd);
         if(mpz_cmp_ui(gcd,(unsigned long)1) == 0)
             break;
         k_int +=1;
@@ -95,7 +88,7 @@ rsa_createkey(handle_t handle,PRSAKEY pkey){
     /* and private key [n,j] */
     mpz_get_str(pkey->private_key.strkey_j,16,HANDLE2PRIVATTRIB(handle)->j);
     mpz_get_str(pkey->public_key.strkey_n,16,HANDLE2PRIVATTRIB(handle)->n);
-    /* clear up everything */
+    /* clean up everything */
     mpz_clear(pminus);
     mpz_clear(qminus);
     mpz_clear(gcd);
