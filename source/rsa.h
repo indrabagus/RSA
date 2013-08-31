@@ -6,20 +6,30 @@ extern "C" {
 
 #define BITSTRENGTH 1024
 
+typedef struct rsapubkey{
+    char strkey_n[1025];
+    char strkey_k[32];
+}rsapubkey_t, *PRSAPUBKEY;
+
+typedef struct rsaprivkey{
+    char strkey_n[1025];
+    char strkey_j[4097];
+}rsaprivkey_t, *PRSAPRIVKEY;
+
 typedef struct rsa {
-    char publickey[64];
-    char privatekey[64];
+    rsapubkey_t     public_key;
+    rsaprivkey_t    private_key;
 
 }rsakey_t;
 
-typedef rsakey_t* PRSAKEY;
+typedef rsakey_t *PRSAKEY;
 
 typedef void* handle_t;
 
 handle_t rsa_initialize(void);
-int rsa_createkey(handle_t handle,PRSAKEY key);
-void rsa_encryptdata(const void* pdata, unsigned long length,void* pubuffer);
-void rsa_decryptdata(const void* pdata,unsigned long length,void* pbuffer);
+int rsa_createkey(handle_t handle,PRSAKEY pkey);
+void rsa_encryptdata(const void* pdata, unsigned long length,void* pbuffer,PRSAPUBKEY ppubkey);
+void rsa_decryptdata(const void* pdata,unsigned long length,void* pbuffer,PRSAPUBKEY pprivkey);
 void rsa_closehandle(handle_t h);
 
 #ifdef __cplusplus

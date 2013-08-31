@@ -1,6 +1,7 @@
 #include <gmp.h>
-#include <stdio.h>
+#include <stdlib.h>
 #include "rsa.h"
+#include <Windows.h>
 
 //#pragma comment(linker,"/NODEFAULTLIB:LIBC");
 
@@ -22,6 +23,7 @@ handle_t
 rsa_initialize(void){
     PPRIVATEATTRIB phandle = (PPRIVATEATTRIB)malloc(sizeof(privattrib_t));
     gmp_randinit_default(phandle->hrandstate);
+    gmp_randseed_ui(phandle->hrandstate,GetTickCount());
     mpz_init2(phandle->p,PRIMESIZE);
     mpz_init2(phandle->q,PRIMESIZE);
     mpz_init(phandle->n);
@@ -42,8 +44,11 @@ rsa_closehandle(handle_t h){
     free(HANDLE2PRIVATTRIB(h));
 }
 
+    static char strtemp[2048];
+
+
 int 
-rsa_createkey(handle_t handle,PRSAKEY key){
+rsa_createkey(handle_t handle,PRSAKEY pkey){
     /* inisialisasi variabel helper */
     mpz_t pminus;
     mpz_t qminus;
@@ -54,8 +59,14 @@ rsa_createkey(handle_t handle,PRSAKEY key){
     mpz_init(gcd);
     /* pick two random prime number (p and q ) */
     mpz_urandomb(HANDLE2PRIVATTRIB(handle)->p,HANDLE2PRIVATTRIB(handle)->hrandstate,PRIMESIZE);
+    mpz_nextprime(HANDLE2PRIVATTRIB(handle)->p,HANDLE2PRIVATTRIB(handle)->p);
+    gmp_randseed_ui(HANDLE2PRIVATTRIB(handle)->hrandstate,GetTickCount());
     mpz_urandomb(HANDLE2PRIVATTRIB(handle)->q,HANDLE2PRIVATTRIB(handle)->hrandstate,PRIMESIZE);
     mpz_nextprime(HANDLE2PRIVATTRIB(handle)->q,HANDLE2PRIVATTRIB(handle)->q);
+    mpz_get_str(strtemp,16,HANDLE2PRIVATTRIB(handle)->p);
+    printf("RandomP=%s\n\n",strtemp);
+    mpz_get_str(strtemp,16,HANDLE2PRIVATTRIB(handle)->q);
+    printf("RandomQ=%s\n\n",strtemp);
     /* calculate n = (p * q) */
     mpz_mul(HANDLE2PRIVATTRIB(handle)->n,HANDLE2PRIVATTRIB(handle)->q,HANDLE2PRIVATTRIB(handle)->p);
     /* calculate z = (p-1) * ( q - 1) */
@@ -66,9 +77,10 @@ rsa_createkey(handle_t handle,PRSAKEY key){
        or in other word gcd(k,z) = 1 */
     while(1){
         mpz_gcd_ui(gcd,HANDLE2PRIVATTRIB(handle)->z,k_int);
+        mpz_get_str(strtemp,16,gcd);
         if(mpz_cmp_ui(gcd,(unsigned long)1) == 0)
             break;
-        k_int +=2;
+        k_int +=1;
     }
     mpz_set_ui(HANDLE2PRIVATTRIB(handle)->k,k_int);
     /* calculate j for ( k * j ) mod z = 1 */
@@ -76,10 +88,17 @@ rsa_createkey(handle_t handle,PRSAKEY key){
         /* cannot find j (multiplicative inverse) */
         return -1;
     }
-    /* then we have publick key = [n,k] and private key [n,j] */
+
+    /* then we have publick key = [n,k] */ 
+    mpz_get_str(pkey->public_key.strkey_k,16,HANDLE2PRIVATTRIB(handle)->k);
+    mpz_get_str(pkey->public_key.strkey_n,16,HANDLE2PRIVATTRIB(handle)->n);
+    /* and private key [n,j] */
+    mpz_get_str(pkey->private_key.strkey_j,16,HANDLE2PRIVATTRIB(handle)->j);
+    mpz_get_str(pkey->public_key.strkey_n,16,HANDLE2PRIVATTRIB(handle)->n);
     /* clear up everything */
     mpz_clear(pminus);
     mpz_clear(qminus);
+    mpz_clear(gcd);
     
     return 0;
 }
