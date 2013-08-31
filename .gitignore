@@ -8,6 +8,8 @@ ipch
 #intermediate file
 *.obj
 *.opensdf
+*.sdf
+*.suo
 # Shared objects (inc. Windows DLLs)
 *.dll
 
