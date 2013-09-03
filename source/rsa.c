@@ -87,7 +87,7 @@ rsa_createkey(handle_t handle,PRSAKEY pkey){
     mpz_get_str(pkey->public_key.strkey_n,16,HANDLE2PRIVATTRIB(handle)->n);
     /* and private key [n,j] */
     mpz_get_str(pkey->private_key.strkey_j,16,HANDLE2PRIVATTRIB(handle)->j);
-    mpz_get_str(pkey->public_key.strkey_n,16,HANDLE2PRIVATTRIB(handle)->n);
+    mpz_get_str(pkey->private_key.strkey_n,16,HANDLE2PRIVATTRIB(handle)->n);
     /* clean up everything */
     mpz_clear(pminus);
     mpz_clear(qminus);
@@ -95,6 +95,77 @@ rsa_createkey(handle_t handle,PRSAKEY pkey){
     
     return 0;
 }
+
+
+void
+rsa_encryptdata(const void* pdata, 
+                unsigned long length,
+                void* pbuffer,
+                PRSAPUBKEY ppubkey){
+
+    mpz_t M;
+    mpz_t c;
+    mpz_t k;
+    mpz_t n;
+    unsigned char* pdatain = (unsigned char*)pdata;
+    char* pdataout = (char*)pbuffer;
+    /* saat ini hanya bisa 4 karakter yang diencrypt */
+    char* pstrin = (char*)malloc((length*2)+1);
+    int idx;
+    //int tmpval;
+    char strtmpval[4];
+    memset(pstrin,0x00,(length*2)+1);
+
+    for(idx = 0; idx < length ;++idx){
+//        tmpval = (int)pdatain[idx];
+        sprintf(strtmpval,"%2.2X",pdatain[idx]);
+        strcat(pstrin,strtmpval);
+    }
+    mpz_init(M);
+    mpz_init(c);
+    mpz_init(k);
+    mpz_init(n);
+    mpz_set_str(k,ppubkey->strkey_k,16);
+    mpz_set_str(n,ppubkey->strkey_n,16);
+    mpz_set_str(M,pstrin,16);
+    free(pstrin);
+
+    /* c = M^k*/
+    mpz_powm(c,M,k,n);
+    mpz_get_str(pdataout,16,c);
+    mpz_clear(M);
+    mpz_clear(c);
+    mpz_clear(k);
+    mpz_clear(n);
+}
+
+void rsa_decryptdata(const void* pdata,
+                     unsigned long length,
+                     void* pbuffer,
+                     PRSAPRIVKEY pprivkey){
+    mpz_t c;
+    mpz_t M;
+    mpz_t n;
+    mpz_t j;
+    char* pdatain = (char*)pdata;
+    char* pdataout = (char*)pbuffer;
+
+    mpz_init(c);
+    mpz_init(M);
+    mpz_init(n);
+    mpz_init(j);
+    mpz_set_str(c,pdatain,16);
+    mpz_set_str(n,pprivkey->strkey_n,16);
+    mpz_set_str(j,pprivkey->strkey_j,16);
+    /* M = (c^j)mod(n)*/
+    mpz_powm(M,c,j,n);
+    mpz_get_str(pdataout,16,M);
+    mpz_clear(c);
+    mpz_clear(M);
+    mpz_clear(n);
+    mpz_clear(j);
+}
+
 
 //void rsa_encrypt(Data P ){
 //    /* let the encrypt function be 

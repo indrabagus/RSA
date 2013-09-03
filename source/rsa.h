@@ -39,7 +39,7 @@ typedef void* handle_t;
 handle_t rsa_initialize(void);
 int rsa_createkey(handle_t handle,PRSAKEY pkey);
 void rsa_encryptdata(const void* pdata, unsigned long length,void* pbuffer,PRSAPUBKEY ppubkey);
-void rsa_decryptdata(const void* pdata,unsigned long length,void* pbuffer,PRSAPUBKEY pprivkey);
+void rsa_decryptdata(const void* pdata,unsigned long length,void* pbuffer,PRSAPRIVKEY pprivkey);
 void rsa_closehandle(handle_t h);
 
 #ifdef __cplusplus

@@ -4,6 +4,9 @@
 
 static handle_t hrsa;
 static rsakey_t rsakey;
+static const char strdatain[4] = {0xDE,0xAD,0xBE,0xAF};
+static char bufferdataout[1024];
+static char bufferdecrypt[1024];
 int main(void)
 {
     std::cout<<"RSA initialization"<<std::endl;
@@ -18,6 +21,10 @@ int main(void)
     std::cout<<"Public Key N: "<<rsakey.public_key.strkey_n<<std::endl<<std::endl<<std::endl;
     std::cout<<"Private Key J: "<<rsakey.private_key.strkey_j<<std::endl<<std::endl;
     std::cout<<"Private Key N: "<<rsakey.public_key.strkey_n<<std::endl<<std::endl;
+    rsa_encryptdata(strdatain,sizeof(strdatain),bufferdataout,&rsakey.public_key);
+    std::cout<<"Encrypted data : "<<bufferdataout<<std::endl;
+    rsa_decryptdata(bufferdataout,strlen(bufferdataout),bufferdecrypt,&rsakey.private_key);
+    std::cout<<"Decrypt data : "<<bufferdecrypt<<std::endl;
     std::cout<<"RSA close handle"<<std::endl;
     rsa_closehandle(hrsa);
     return 0;
