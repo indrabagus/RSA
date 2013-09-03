@@ -1,9 +1,15 @@
 #include <gmp.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include "rsa.h"
 #include <Windows.h>
 
-//#pragma comment(linker,"/NODEFAULTLIB:LIBC");
+/*
+Note:
+#pragma comment(linker,"/NODEFAULTLIB:LIBC");
+harus ditambahkan jika ingin mengcompile menggunakan 'cl' diconsole
+*/
+#define SWAP4BYTE(val)  (((val & 0xFF000000)>>24)|((val & 0xFF0000) >> 8)|((val & 0xFF00) << 8) | ((val & 0xFF) << 24))
 
 #define PRIMESIZE   (BITSTRENGTH / 2)
 
@@ -109,15 +115,12 @@ rsa_encryptdata(const void* pdata,
     mpz_t n;
     unsigned char* pdatain = (unsigned char*)pdata;
     char* pdataout = (char*)pbuffer;
-    /* saat ini hanya bisa 4 karakter yang diencrypt */
     char* pstrin = (char*)malloc((length*2)+1);
-    int idx;
-    //int tmpval;
+    unsigned long idx;
     char strtmpval[4];
     memset(pstrin,0x00,(length*2)+1);
 
     for(idx = 0; idx < length ;++idx){
-//        tmpval = (int)pdatain[idx];
         sprintf(strtmpval,"%2.2X",pdatain[idx]);
         strcat(pstrin,strtmpval);
     }
@@ -130,7 +133,7 @@ rsa_encryptdata(const void* pdata,
     mpz_set_str(M,pstrin,16);
     free(pstrin);
 
-    /* c = M^k*/
+    /* c = (M ^ k) mod n*/
     mpz_powm(c,M,k,n);
     mpz_get_str(pdataout,16,c);
     mpz_clear(M);
@@ -149,7 +152,11 @@ void rsa_decryptdata(const void* pdata,
     mpz_t j;
     char* pdatain = (char*)pdata;
     char* pdataout = (char*)pbuffer;
-
+    size_t counter;
+    int idx;
+    char* plimbend;
+    char* plimbiter;
+    /* Inisialisasi Super integer */
     mpz_init(c);
     mpz_init(M);
     mpz_init(n);
@@ -159,7 +166,19 @@ void rsa_decryptdata(const void* pdata,
     mpz_set_str(j,pprivkey->strkey_j,16);
     /* M = (c^j)mod(n)*/
     mpz_powm(M,c,j,n);
-    mpz_get_str(pdataout,16,M);
+    /* Karena inisialisasi data yang masuk pada super integer terbalik maka kita mentransfer 
+    ke output buffer dari akhir buffer 'limb' pada super integer ke awal buffer super integer */
+    plimbend = (char*)M->_mp_d;
+    plimbiter = plimbend + ((M->_mp_size*sizeof(mp_limb_t))-1);
+    while(plimbiter >= plimbend){
+        if(*plimbiter == 0x00){
+            plimbiter--;
+            continue;
+        }
+        *pdataout++ = *plimbiter;
+        plimbiter--;
+    }
+    /* Clean em all */
     mpz_clear(c);
     mpz_clear(M);
     mpz_clear(n);
@@ -167,30 +186,3 @@ void rsa_decryptdata(const void* pdata,
 }
 
 
-//void rsa_encrypt(Data P ){
-//    /* let the encrypt function be 
-//        E = (P ^ k) mod n */
-//}
-//
-//void rsa_decrypt(Data Encr ) {
-//    /* Let the decryption function be
-//        P = (Encr ^ j) mode n*/
-//}
-
-//int main()
-//{
-//    static mpz_t result;
-//    int idx;
-//    mpz_init2(hbigint,1024);
-//    mpz_set_str(hbigint,"c00ffec00ffec00ffec00ffec00ffec00ffec00ffec00ffec00ffec00ffec00ffec00ffe",16);
-//    mpz_mul_ui(result,hbigint,0xDFDFAAAA);
-//    printf("BIG Integer : %s\n",mpz_get_str(NULL,16,result));
-//    printf("Allocated limb : %d,%d\n",hbigint->_mp_alloc,hbigint->_mp_size);
-//    for(idx = 0 ; idx < hbigint->_mp_alloc ; ++idx){
-//        printf("limb[%d] = %X \n",idx,hbigint->_mp_d[idx]);
-//    }
-//    mpz_clear(hbigint);
-//    mpn_rshift (&hbigint->_mp_d[8], &hbigint->_mp_d[8], sizeof(mp_limb_t), 2);
-//    printf("limb[8] = %X \n",hbigint->_mp_d[8]);
-//    return 0;
-//}

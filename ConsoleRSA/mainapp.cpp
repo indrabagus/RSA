@@ -4,7 +4,9 @@
 
 static handle_t hrsa;
 static rsakey_t rsakey;
-static const char strdatain[4] = {0xDE,0xAD,0xBE,0xAF};
+static const char strdatain[] = {'i','n','d','r','a','.','b','a',
+                                 'g','u','s','@','g','m','a','i',
+                                 'l','.','c','o','m'};
 static char bufferdataout[1024];
 static char bufferdecrypt[1024];
 int main(void)
