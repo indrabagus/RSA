@@ -17,6 +17,9 @@ typedef struct internalrsa {
     gmp_randstate_t hrandstate;
     mpz_t p;
     mpz_t q;
+    mpz_t pminus;
+    mpz_t qminus;
+    mpz_t gcd;
     mpz_t n;
     mpz_t z;
     mpz_t k;
@@ -25,79 +28,82 @@ typedef struct internalrsa {
 
 #define HANDLE2PRIVATTRIB(handle) ((PPRIVATEATTRIB)handle)
 
-handle_t 
-rsa_initialize(void){
-    PPRIVATEATTRIB phandle = (PPRIVATEATTRIB)malloc(sizeof(privattrib_t));
-    gmp_randinit_default(phandle->hrandstate);
-    gmp_randseed_ui(phandle->hrandstate,GetTickCount());
-    mpz_init2(phandle->p,PRIMESIZE);
-    mpz_init2(phandle->q,PRIMESIZE);
-    mpz_init(phandle->n);
-    mpz_init(phandle->z);
-    mpz_init(phandle->k);
-    mpz_init(phandle->j);
-    return (handle_t)phandle;
+
+static PPRIVATEATTRIB
+create_private_attrib(void){
+    PPRIVATEATTRIB pattrib = (PPRIVATEATTRIB)malloc(sizeof(privattrib_t));
+    gmp_randinit_default(pattrib->hrandstate);
+    gmp_randseed_ui(pattrib->hrandstate,GetTickCount());
+    mpz_init2(pattrib->p,PRIMESIZE);
+    mpz_init2(pattrib->q,PRIMESIZE);
+    mpz_init(pattrib->pminus);
+    mpz_init(pattrib->qminus);
+    mpz_init(pattrib->gcd);
+    mpz_init(pattrib->n);
+    mpz_init(pattrib->z);
+    mpz_init(pattrib->k);
+    mpz_init(pattrib->j);
+    return pattrib;
 }
 
-void 
-rsa_closehandle(handle_t h){
-    mpz_clear(HANDLE2PRIVATTRIB(h)->p);
-    mpz_clear(HANDLE2PRIVATTRIB(h)->q);
-    mpz_clear(HANDLE2PRIVATTRIB(h)->n);
-    mpz_clear(HANDLE2PRIVATTRIB(h)->z);
-    mpz_clear(HANDLE2PRIVATTRIB(h)->k);
-    mpz_clear(HANDLE2PRIVATTRIB(h)->j);
-    free(HANDLE2PRIVATTRIB(h));
+static void
+destroy_private_attrib(PPRIVATEATTRIB pattrib){
+    mpz_clear(pattrib->p);
+    mpz_clear(pattrib->q);
+    mpz_clear(pattrib->pminus);
+    mpz_clear(pattrib->qminus);
+    mpz_clear(pattrib->gcd);
+    mpz_clear(pattrib->n);
+    mpz_clear(pattrib->z);
+    mpz_clear(pattrib->k);
+    mpz_clear(pattrib->j);
+    free(pattrib);
 }
-
 
 int 
-rsa_createkey(handle_t handle,PRSAKEY pkey){
+rsa_createkey(PRSAKEY pkey){
     /* inisialisasi variabel helper */
-    mpz_t pminus;
-    mpz_t qminus;
-    mpz_t gcd;
     unsigned long int k_int = 65537;
-    mpz_init(pminus);
-    mpz_init(qminus);
-    mpz_init(gcd);
+    PPRIVATEATTRIB prsaattrib = create_private_attrib();
+    if(prsaattrib==0x00)
+        return -1;
+
+
     /* pick two random prime number (p and q ) */
-    mpz_urandomb(HANDLE2PRIVATTRIB(handle)->p,HANDLE2PRIVATTRIB(handle)->hrandstate,PRIMESIZE);
-    mpz_nextprime(HANDLE2PRIVATTRIB(handle)->p,HANDLE2PRIVATTRIB(handle)->p);
-    gmp_randseed_ui(HANDLE2PRIVATTRIB(handle)->hrandstate,GetTickCount());
-    mpz_urandomb(HANDLE2PRIVATTRIB(handle)->q,HANDLE2PRIVATTRIB(handle)->hrandstate,PRIMESIZE);
-    mpz_nextprime(HANDLE2PRIVATTRIB(handle)->q,HANDLE2PRIVATTRIB(handle)->q);
+    mpz_urandomb(prsaattrib->p,prsaattrib->hrandstate,PRIMESIZE);
+    mpz_nextprime(prsaattrib->p,prsaattrib->p);
+    gmp_randseed_ui(prsaattrib->hrandstate,GetTickCount());
+    mpz_urandomb(prsaattrib->q,prsaattrib->hrandstate,PRIMESIZE);
+    mpz_nextprime(prsaattrib->q,prsaattrib->q);
     /* calculate n = (p * q) */
-    mpz_mul(HANDLE2PRIVATTRIB(handle)->n,HANDLE2PRIVATTRIB(handle)->q,HANDLE2PRIVATTRIB(handle)->p);
+    mpz_mul(prsaattrib->n,prsaattrib->q,prsaattrib->p);
     /* calculate z = (p-1) * ( q - 1) */
-    mpz_sub_ui(pminus,HANDLE2PRIVATTRIB(handle)->p,(unsigned int)1);
-    mpz_sub_ui(qminus,HANDLE2PRIVATTRIB(handle)->q,(unsigned int)1);
-    mpz_mul(HANDLE2PRIVATTRIB(handle)->z,pminus,qminus);
+    mpz_sub_ui(prsaattrib->pminus,prsaattrib->p,(unsigned int)1);
+    mpz_sub_ui(prsaattrib->qminus,prsaattrib->q,(unsigned int)1);
+    mpz_mul(prsaattrib->z,prsaattrib->pminus,prsaattrib->qminus);
     /* choose k, such that k is co-prime to z, i.e z is not divisible by k 
        or in other word gcd(k,z) = 1 */
     while(1){
-        mpz_gcd_ui(gcd,HANDLE2PRIVATTRIB(handle)->z,k_int);
-        if(mpz_cmp_ui(gcd,(unsigned long)1) == 0)
+        mpz_gcd_ui(prsaattrib->gcd,prsaattrib->z,k_int);
+        if(mpz_cmp_ui(prsaattrib->gcd,(unsigned long)1) == 0)
             break;
         k_int +=1;
     }
-    mpz_set_ui(HANDLE2PRIVATTRIB(handle)->k,k_int);
+    mpz_set_ui(prsaattrib->k,k_int);
     /* calculate j for ( k * j ) mod z = 1 */
-    if(mpz_invert(HANDLE2PRIVATTRIB(handle)->j,HANDLE2PRIVATTRIB(handle)->k,HANDLE2PRIVATTRIB(handle)->z) == 0){
+    if(mpz_invert(prsaattrib->j,prsaattrib->k,prsaattrib->z) == 0){
         /* cannot find j (multiplicative inverse) */
         return -1;
     }
 
     /* then we have publick key = [n,k] */ 
-    mpz_get_str(pkey->public_key.strkey_k,16,HANDLE2PRIVATTRIB(handle)->k);
-    mpz_get_str(pkey->public_key.strkey_n,16,HANDLE2PRIVATTRIB(handle)->n);
+    mpz_get_str(pkey->public_key.strkey_k,16,prsaattrib->k);
+    mpz_get_str(pkey->public_key.strkey_n,16,prsaattrib->n);
     /* and private key [n,j] */
-    mpz_get_str(pkey->private_key.strkey_j,16,HANDLE2PRIVATTRIB(handle)->j);
-    mpz_get_str(pkey->private_key.strkey_n,16,HANDLE2PRIVATTRIB(handle)->n);
+    mpz_get_str(pkey->private_key.strkey_j,16,prsaattrib->j);
+    mpz_get_str(pkey->private_key.strkey_n,16,prsaattrib->n);
     /* clean up everything */
-    mpz_clear(pminus);
-    mpz_clear(qminus);
-    mpz_clear(gcd);
+    destroy_private_attrib(prsaattrib);
     
     return 0;
 }
@@ -152,8 +158,6 @@ void rsa_decryptdata(const void* pdata,
     mpz_t j;
     char* pdatain = (char*)pdata;
     char* pdataout = (char*)pbuffer;
-    size_t counter;
-    int idx;
     char* plimbend;
     char* plimbiter;
     /* Inisialisasi Super integer */
