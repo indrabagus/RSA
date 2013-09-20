@@ -9,6 +9,14 @@ static rsakey_t rsakey;
 static const char* strdatain = "Indra Bagus Wicaksono <indra@xirkachipset.com>";
 static char bufferdataout[BITSTRENGTH];
 static char bufferdecrypt[BITSTRENGTH];
+
+std::string generaterandomdata(int bitlength)
+{
+    std::string retval;
+    return retval;
+}
+
+
 int main(void)
 {
     int retval;
