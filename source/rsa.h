@@ -14,16 +14,16 @@ authors        : Indra Bagus Wicaksono <indra.bagus@gmail.com>
 extern "C" {
 #endif
 
-#define BITSTRENGTH 1024
+#define BITSTRENGTH (1024*8)
 
 typedef struct rsapubkey{
-    char strkey_n[1025];
-    char strkey_k[32];
+    char strkey_n[BITSTRENGTH];
+    char strkey_k[BITSTRENGTH];
 }rsapubkey_t, *PRSAPUBKEY;
 
 typedef struct rsaprivkey{
-    char strkey_n[1025];
-    char strkey_j[4097];
+    char strkey_n[BITSTRENGTH];
+    char strkey_j[BITSTRENGTH*2];
 }rsaprivkey_t, *PRSAPRIVKEY;
 
 typedef struct rsa {

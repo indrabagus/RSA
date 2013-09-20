@@ -11,7 +11,7 @@ harus ditambahkan jika ingin mengcompile menggunakan 'cl' diconsole
 */
 #define SWAP4BYTE(val)  (((val & 0xFF000000)>>24)|((val & 0xFF0000) >> 8)|((val & 0xFF00) << 8) | ((val & 0xFF) << 24))
 
-#define PRIMESIZE   (BITSTRENGTH / 2)
+#define PRIMESIZE   (BITSTRENGTH / 4)
 
 typedef struct internalrsa {
     gmp_randstate_t hrandstate;
@@ -93,6 +93,7 @@ rsa_createkey(PRSAKEY pkey){
     /* calculate j for ( k * j ) mod z = 1 */
     if(mpz_invert(prsaattrib->j,prsaattrib->k,prsaattrib->z) == 0){
         /* cannot find j (multiplicative inverse) */
+        destroy_private_attrib(prsaattrib);
         return -1;
     }
 
