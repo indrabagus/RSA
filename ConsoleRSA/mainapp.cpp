@@ -99,7 +99,7 @@ static int gentestvector(int numvector){
     static int statfailed = 0;
     int i=0;
     while(i<2){
-        szrandomdatain = generaterandomdata(BITSTRENGTH);
+        szrandomdatain = generaterandomdata(BITSTRENGTH-1);
         vectorinput.clear();
         string2buffer(szrandomdatain,vectorinput);
         std::cout<<"Random Data Input, size="<<vectorinput.size()<<" Byte(s)"<<std::endl;
