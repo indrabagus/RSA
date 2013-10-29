@@ -10,6 +10,8 @@ authors        : Indra Bagus Wicaksono <indra.bagus@gmail.com>
 
 #ifndef RSA_H
 #define RSA_H
+#include <mpir.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -26,13 +28,20 @@ typedef struct rsaprivkey{
     char strkey_j[BITSTRENGTH*2];
 }rsaprivkey_t, *PRSAPRIVKEY;
 
+typedef struct rsapubkey_ex{
+    mpz_t p;
+    mpz_t q;
+    mpz_t e;
+} *PPUBKEY_EX;
+
 typedef struct rsaprivkey_ex{
-    void* p;
-    void* q;
-    void* dp;
-    void* dq;
-    void* cz;
-};
+    mpz_t p;
+    mpz_t q;
+    mpz_t dp;
+    mpz_t dq;
+    mpz_t zp;
+    mpz_t zq;
+} *PPRIVKEY_EX;
 
 typedef struct rsa {
     rsapubkey_t     public_key;
@@ -46,6 +55,13 @@ typedef rsakey_t *PRSAKEY;
 int rsa_createkey(PRSAKEY pkey);
 void rsa_encryptdata(const void* pdata, unsigned long length,void* pbuffer,PRSAPUBKEY ppubkey);
 int rsa_decryptdata(const void* pdata,unsigned long length,void* pbuffer,PRSAPRIVKEY pprivkey);
+
+int rsa_createkey_ex(PPUBKEY_EX ppubkey,PPRIVKEY_EX pprivkey);
+void rsa_cleanup_pubkey(PPUBKEY_EX ppubkey);
+void rsa_cleanup_privkey(PPRIVKEY_EX pprivkey);
+int rsa_encryptdata_ex(const void* pdata, unsigned long len,void* pbufferout,PPUBKEY_EX ppubkey);
+int rsa_decrypdata_ex(const void* pdata,unsigned long len,void* pbufferout,PPRIVKEY_EX pprivkey);
+
 
 #ifdef __cplusplus
 }

@@ -93,6 +93,7 @@ rsa_createkey(PRSAKEY pkey){
         k_int +=1;
     }
     mpz_set_ui(prsaattrib->k,k_int);
+
     /* calculate j for ( k * j ) mod z = 1 */
     if(mpz_invert(prsaattrib->j,prsaattrib->k,prsaattrib->z) == 0){
         /* cannot find j (multiplicative inverse) */
@@ -100,7 +101,7 @@ rsa_createkey(PRSAKEY pkey){
         return -1;
     }
 
-    /* then we have publick key = [n,k] */ 
+    /* then we have public key = [n,k] */ 
     mpz_get_str(pkey->public_key.strkey_k,16,prsaattrib->k);
     mpz_get_str(pkey->public_key.strkey_n,16,prsaattrib->n);
     /* and private key [n,j] */
@@ -197,3 +198,174 @@ int rsa_decryptdata(const void* pdata,
 }
 
 
+/*--------------------------------------------------------------------------*/
+
+int 
+rsa_createkey_ex(PPUBKEY_EX ppubkey,PPRIVKEY_EX pprivkey){
+    int retval;
+    gmp_randstate_t hrandstate;
+    mpz_t n;
+    mpz_t pminus;
+    mpz_t qminus;
+    mpz_t z;
+    mpz_t gcd;
+    mpz_t d;
+    unsigned long int k_int = 65537;
+    /* inisialisasi semuanya */
+    gmp_randinit_default(hrandstate);
+    mpz_init(n);
+    mpz_init(pminus);
+    mpz_init(qminus);
+    mpz_init(z);
+    mpz_init(gcd);
+    mpz_init(d);
+    mpz_init(ppubkey->p);
+    mpz_init(ppubkey->q);
+    mpz_init(ppubkey->e);
+    mpz_init(pprivkey->p);
+    mpz_init(pprivkey->q);
+    mpz_init(pprivkey->dp);
+    mpz_init(pprivkey->dq);
+    mpz_init(pprivkey->zp);
+    mpz_init(pprivkey->zq);
+
+    /* inisialisasi randomizer */
+    gmp_randseed_ui(hrandstate,GetTickCount());
+    /* pick two random prime number (p and q ) */
+    mpz_urandomb(pprivkey->p,hrandstate,PRIMESIZE);
+    mpz_nextprime(pprivkey->p,pprivkey->p);
+    mpz_urandomb(pprivkey->q,hrandstate,PRIMESIZE);
+    mpz_nextprime(pprivkey->q,pprivkey->q);
+    /* set public key p and q */
+    mpz_set(ppubkey->p,pprivkey->p);
+    mpz_set(ppubkey->q,pprivkey->q);
+    /* calculate n = (p * q) */
+    mpz_mul(n,pprivkey->q,pprivkey->p);
+    /* calculate z = (p-1) * ( q - 1) */
+    mpz_sub_ui(pminus,pprivkey->p,(unsigned int)1);
+    mpz_sub_ui(qminus,pprivkey->q,(unsigned int)1);
+    mpz_mul(z,pminus,qminus);
+    /* choose k, such that k is co-prime to z, i.e z is not divisible by k 
+       or in other word gcd(k,z) = 1 */
+    while(1){
+        mpz_gcd_ui(gcd,z,k_int);
+        if(mpz_cmp_ui(gcd,(unsigned long)1) == 0)
+            break;
+        k_int +=1;
+    }
+    mpz_set_ui(ppubkey->e,k_int);
+
+    /* calculate d for  e * d  = 1 mod z 
+       which result d = e^(-1) mod z;
+    */
+    if(mpz_invert(d,ppubkey->e,z) == 0){
+        /* cannot find d (multiplicative inverse) */
+        rsa_cleanup_pubkey(ppubkey);
+        rsa_cleanup_privkey(pprivkey);
+        retval = -1;
+        goto closure;
+    }
+    /* dp = d mod (p-1), dq = d mod (q-1) */
+    mpz_mod(pprivkey->dp,d,pminus);
+    mpz_mod(pprivkey->dq,d,qminus);
+
+    /* zp = q^(p-1) mod n, zq = p^(q-1) mod n */
+    mpz_powm(pprivkey->zp,pprivkey->q,pminus,n);
+    mpz_powm(pprivkey->zq,pprivkey->p,qminus,n);
+
+    retval = 0;
+    goto closure;
+
+
+
+closure:
+    mpz_clear(n);
+    mpz_clear(pminus);
+    mpz_clear(qminus);
+    mpz_clear(z);
+    mpz_clear(gcd);
+    mpz_clear(d);
+    return retval;
+
+
+}
+
+void
+rsa_cleanup_pubkey(PPUBKEY_EX ppubkey){
+    mpz_clear(ppubkey->p);
+    mpz_clear(ppubkey->q);
+    mpz_clear(ppubkey->e);
+}
+
+
+
+void rsa_cleanup_privkey(PPRIVKEY_EX pprivkey){
+    mpz_clear(pprivkey->p);
+    mpz_clear(pprivkey->q);
+    mpz_clear(pprivkey->dp);
+    mpz_clear(pprivkey->dq);
+    mpz_clear(pprivkey->zp);
+    mpz_clear(pprivkey->zq);
+}
+
+int 
+rsa_encryptdata_ex(mpz_t* raw,mpz_t* ciphered,PPUBKEY_EX ppubkey){
+    mpz_t n;
+    mpz_init(n);
+    mpz_mul(n,ppubkey->p,ppubkey->q);
+    mpz_powm(*ciphered,*raw,ppubkey->e,n);
+    mpz_clear(n);
+    return 0;
+}
+
+int 
+rsa_decrypdata_ex(mpz_t* ciphered,mpz_t* output,PPRIVKEY_EX pprivkey){
+    mpz_t cp;
+    mpz_t cq;
+    mpz_t pp;
+    mpz_t pq;
+    mpz_t sp;
+    mpz_t sq;
+    mpz_t ppzp;
+    mpz_t pqzq;
+    mpz_t n;
+    mpz_t spsq;
+
+    mpz_init(cp);
+    mpz_init(cq);
+    mpz_init(pp);
+    mpz_init(pq);
+    mpz_init(sp);
+    mpz_init(sq);
+    mpz_init(ppzp);
+    mpz_init(pqzq);
+    mpz_init(n);
+    mpz_init(spsq);
+
+    mpz_mod(cp,*ciphered,pprivkey->p);
+    mpz_mod(cq,*ciphered,pprivkey->q);
+    mpz_powm(pp,cp,pprivkey->dp,pprivkey->p);
+    mpz_powm(pq,cq,pprivkey->dq,pprivkey->p);
+    mpz_mul(ppzp,pp,pprivkey->zp);
+    mpz_mul(pqzq,pq,pprivkey->zq);
+    mpz_mul(n,pprivkey->p,pprivkey->q);
+    mpz_mod(sp,ppzp,n);
+    mpz_mod(sq,pqzq,n);
+    mpz_add(spsq,sp,sq);
+    if(mpz_cmp(spsq,n) >= 0)
+        mpz_sub(*output,spsq,n);
+    else
+        mpz_set(*output,spsq);
+    mpz_clear(spsq);
+    mpz_clear(n);
+    mpz_clear(cp);
+    mpz_clear(cq);
+    mpz_clear(pp);
+    mpz_clear(pq);
+    mpz_clear(sp);
+    mpz_clear(sq);
+    mpz_clear(ppzp);
+    mpz_clear(pqzq);
+
+    return 0;
+}
