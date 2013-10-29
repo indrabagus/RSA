@@ -9,7 +9,7 @@ Note:
 #pragma comment(linker,"/NODEFAULTLIB:LIBC");
 harus ditambahkan jika ingin mengcompile menggunakan 'cl' diconsole
 */
-#define SWAP4BYTE(val)  (((val & 0xFF000000)>>24)|((val & 0xFF0000) >> 8)|((val & 0xFF00) << 8) | ((val & 0xFF) << 24))
+//#define SWAP4BYTE(val)  (((val & 0xFF000000)>>24)|((val & 0xFF0000) >> 8)|((val & 0xFF00) << 8) | ((val & 0xFF) << 24))
 
 #define PRIMESIZE   (BITSTRENGTH / 2)
 
@@ -34,8 +34,10 @@ create_private_attrib(void){
     PPRIVATEATTRIB pattrib = (PPRIVATEATTRIB)malloc(sizeof(privattrib_t));
     gmp_randinit_default(pattrib->hrandstate);
     gmp_randseed_ui(pattrib->hrandstate,GetTickCount());
-    mpz_init2(pattrib->p,PRIMESIZE);
-    mpz_init2(pattrib->q,PRIMESIZE);
+    //mpz_init2(pattrib->p,PRIMESIZE);
+    //mpz_init2(pattrib->q,PRIMESIZE);
+    mpz_init(pattrib->p);
+    mpz_init(pattrib->q);
     mpz_init(pattrib->pminus);
     mpz_init(pattrib->qminus);
     mpz_init(pattrib->gcd);
@@ -72,7 +74,7 @@ rsa_createkey(PRSAKEY pkey){
     /* pick two random prime number (p and q ) */
     mpz_urandomb(prsaattrib->p,prsaattrib->hrandstate,PRIMESIZE);
     mpz_nextprime(prsaattrib->p,prsaattrib->p);
-    gmp_randseed_ui(prsaattrib->hrandstate,GetTickCount());
+    //gmp_randseed_ui(prsaattrib->hrandstate,GetTickCount());
     mpz_urandomb(prsaattrib->q,prsaattrib->hrandstate,PRIMESIZE);
     mpz_nextprime(prsaattrib->q,prsaattrib->q);
     /* calculate n = (p * q) */
@@ -149,7 +151,7 @@ rsa_encryptdata(const void* pdata,
     mpz_clear(n);
 }
 
-void rsa_decryptdata(const void* pdata,
+int rsa_decryptdata(const void* pdata,
                      unsigned long length,
                      void* pbuffer,
                      PRSAPRIVKEY pprivkey){
@@ -161,6 +163,7 @@ void rsa_decryptdata(const void* pdata,
     char* pdataout = (char*)pbuffer;
     char* plimbend;
     char* plimbiter;
+    int retval;
     /* Inisialisasi Super integer */
     mpz_init(c);
     mpz_init(M);
@@ -173,6 +176,7 @@ void rsa_decryptdata(const void* pdata,
     mpz_powm(M,c,j,n);
     /* Karena inisialisasi data yang masuk pada super integer terbalik maka kita mentransfer 
     ke output buffer dari akhir buffer 'limb' pada super integer ke awal buffer super integer */
+    retval = M->_mp_size*sizeof(mp_limb_t);
     plimbend = (char*)M->_mp_d;
     plimbiter = plimbend + ((M->_mp_size*sizeof(mp_limb_t))-1);
     while(plimbiter >= plimbend){
@@ -188,6 +192,7 @@ void rsa_decryptdata(const void* pdata,
     mpz_clear(M);
     mpz_clear(n);
     mpz_clear(j);
+    return retval;
 }
 
 
