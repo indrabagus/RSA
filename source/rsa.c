@@ -1,4 +1,5 @@
-#include <gmp.h>
+//#include <gmp.h>
+#include <mpir.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include "rsa.h"
