@@ -10,11 +10,17 @@ static rsakey_t rsakey;
 //static const char strdatain[] = {'i','n','d','r','a','.','b','a',
 //                                 'g','u','s','@','g','m','a','i',
 //                                 'l','.','c','o','m'};
+
 //static const char* strdatain = "Indra Bagus Wicaksono <indra@xirkachipset.com>";
+
+static char strdatain[] = {0xd1,0xd2,0xd3,0xd4,0xd5,0xd6};
+
 static char bufferdataout[BITSTRENGTH*4];
 static char bufferdecrypt[BITSTRENGTH*4];
 static std::string szrandomdatain;
 static std::vector<char> vectorinput;
+static rsapubkey_ex rsapublic;
+static rsaprivkey_ex rsaprivkey;
 
 static void string2buffer(const std::string& szinput,std::vector<char>& output){
     if((szinput.size() % 2)){
@@ -106,7 +112,7 @@ static int gentestvector(int numvector){
 
         rsa_encryptdata((char*)&vectorinput[0],vectorinput.size(),bufferdataout,&rsakey.public_key);
         std::cout<<"Encrypted Data: "<<strlen(bufferdataout)<<" Bytes"<<std::endl;
-        int len = rsa_decryptdata(bufferdataout,strlen(bufferdataout),bufferdecrypt,&rsakey.private_key);
+        int len = rsa_decryptdata(bufferdataout,sizeof(bufferdataout),bufferdecrypt,&rsakey.private_key);
         //if (strcmp(bufferdecrypt,szrandomdatain.c_str())!=0){
         if(memcmp(&vectorinput[0],bufferdecrypt,len)){
             std::cout<<"RSA FAILED"<<std::endl;
@@ -131,63 +137,49 @@ static int gentestvector(int numvector){
 }
 
 
+void
+cipherdecipher(void){
+    mpz_t datain;
+    mpz_t ciphertext;
+    mpz_t dataout;
+    int retval;
+    unsigned char* szp;
+
+    mpz_init(datain);
+    mpz_init(ciphertext);
+    mpz_init(dataout);
+    do{
+        retval = rsa_createkey_ex(&rsapublic,&rsaprivkey);
+    }while(retval != 0);
+    size_t sizelen = mpz_sizeinbase(rsapublic.p,16);
+    szp = new unsigned char[(sizelen*3)+2];
+    mpz_get_str((char*)szp,16,rsapublic.p);
+    std::cout<<szp<<std::endl<<std::endl;
+    mpz_import(datain,sizeof(strdatain),1,1,0,0,strdatain);
+    rsa_encryptdata_ex(ciphertext,datain,&rsapublic);
+    rsa_decrypdata_ex(dataout,ciphertext,&rsaprivkey);
+    //mpz_export(szp,&sizelen,1,1,0,0,dataout);
+    mpz_get_str((char*)szp,16,dataout);
+
+    std::cout<<szp<<std::endl<<std::endl;
+    delete[] szp;
+    mpz_clear(datain);
+    mpz_clear(ciphertext);
+    mpz_clear(dataout);
+    rsa_cleanup_pubkey(&rsapublic);
+    rsa_cleanup_privkey(&rsaprivkey);
+}
+
 int main(void)
 {
-    //int retval;
-    //std::cout<<"RSA Key creation"<<std::endl;
-    //do{
-    //    retval = rsa_createkey(&rsakey);
-    //    std::cout<<".";
-    //}while(retval != 0);
-    //std::cout<<std::endl;
-    //std::cout<<"Public Key K: "<<rsakey.public_key.strkey_k<<std::endl;
-    //std::cout<<"Public Key N: "<<strlen(rsakey.public_key.strkey_n)/2<<" Bytes"<<
-    //std::endl<<rsakey.public_key.strkey_n<<std::endl<<std::endl<<std::endl;
-    //std::cout<<"Private Key J: "<<strlen(rsakey.private_key.strkey_j)/2<<" Bytes"
-    //         <<std::endl<<rsakey.private_key.strkey_j<<std::endl<<std::endl;
-    //std::cout<<"Private Key N: "<<strlen(rsakey.private_key.strkey_n)/2<<" Bytes"
-    //         <<std::endl<<rsakey.public_key.strkey_n<<std::endl<<std::endl;
 
-    //static int statsuccess = 0;
-    //static int statfailed = 0;
-    ////for(int i=0;i<100;++i){
-    //while(1){
-    //    szrandomdatain = generaterandomdata(BITSTRENGTH);
-    //    vectorinput.clear();
-    //    string2buffer(szrandomdatain,vectorinput);
-    //    //std::cout<<"Random Data Input, size="<<szrandomdatain.size()<<" Byte(s)"<<std::endl;
-    //    //std::cout<<szrandomdatain.c_str()<<std::endl<<std::endl;
-    //    std::cout<<"Random data input,size="<<vectorinput.size()<<" Byte(s)"<<std::endl;
-    //    std::cout<<szrandomdatain.c_str()<<std::endl;
-    //    //rsa_encryptdata((char*)szrandomdatain.c_str(),szrandomdatain.size(),bufferdataout,&rsakey.public_key);
-    //    rsa_encryptdata(&vectorinput[0],vectorinput.size(),bufferdataout,&rsakey.public_key);
-    //    std::cout<<"Encrypted Data: "<<strlen(bufferdataout)<<" Bytes"<<std::endl
-    //             <<bufferdataout<<std::endl;
-    //    int decrlen = rsa_decryptdata(bufferdataout,strlen(bufferdataout),bufferdecrypt,&rsakey.private_key);
-    //    //std::cout<<"Decrypt  Data: "<<strlen(bufferdecrypt)<<" Bytes"<<std::endl
-    //    //         <<std::endl<<bufferdecrypt<<std::endl<<std::endl;
-    //    //if (strcmp(bufferdecrypt,szrandomdatain.c_str())!=0){
-    //    if(memcmp(&vectorinput[0],bufferdecrypt,decrlen)){
-    //        std::cout<<"RSA FAILED"<<std::endl;
-    //        ++statfailed;
-    //    }
-    //    else{
-    //        std::cout<<"RSA SUCCESS"<<std::endl;
-    //        ++statsuccess;
-    //        if(statsuccess == 10)
-    //            break;
-    //    }
-    //    std::cout<<std::endl;
+
+    //int i=0;
+    //while(i<4){
+    //    if(gentestvector(i) == -1)
+    //        continue;
+    //    ++i;
     //}
-    //std::cout<<"Number of failed  = "<<statfailed<<std::endl;
-    //std::cout<<"Number of success = "<<statsuccess<<std::endl;
-    //std::cout<<"Decrypted Data"<<std::endl<<bufferdecrypt<<std::endl;
-
-    int i=0;
-    while(i<4){
-        if(gentestvector(i) == -1)
-            continue;
-        ++i;
-    }
+    cipherdecipher();
     return 0;
 }

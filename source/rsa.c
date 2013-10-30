@@ -209,7 +209,7 @@ rsa_createkey_ex(PPUBKEY_EX ppubkey,PPRIVKEY_EX pprivkey){
     mpz_t qminus;
     mpz_t z;
     mpz_t gcd;
-    mpz_t d;
+    //mpz_t d;
     unsigned long int k_int = 65537;
     /* inisialisasi semuanya */
     gmp_randinit_default(hrandstate);
@@ -218,12 +218,12 @@ rsa_createkey_ex(PPUBKEY_EX ppubkey,PPRIVKEY_EX pprivkey){
     mpz_init(qminus);
     mpz_init(z);
     mpz_init(gcd);
-    mpz_init(d);
     mpz_init(ppubkey->p);
     mpz_init(ppubkey->q);
     mpz_init(ppubkey->e);
     mpz_init(pprivkey->p);
     mpz_init(pprivkey->q);
+    mpz_init(pprivkey->d);
     mpz_init(pprivkey->dp);
     mpz_init(pprivkey->dq);
     mpz_init(pprivkey->zp);
@@ -258,7 +258,7 @@ rsa_createkey_ex(PPUBKEY_EX ppubkey,PPRIVKEY_EX pprivkey){
     /* calculate d for  e * d  = 1 mod z 
        which result d = e^(-1) mod z;
     */
-    if(mpz_invert(d,ppubkey->e,z) == 0){
+    if(mpz_invert(pprivkey->d,ppubkey->e,z) == 0){
         /* cannot find d (multiplicative inverse) */
         rsa_cleanup_pubkey(ppubkey);
         rsa_cleanup_privkey(pprivkey);
@@ -266,8 +266,8 @@ rsa_createkey_ex(PPUBKEY_EX ppubkey,PPRIVKEY_EX pprivkey){
         goto closure;
     }
     /* dp = d mod (p-1), dq = d mod (q-1) */
-    mpz_mod(pprivkey->dp,d,pminus);
-    mpz_mod(pprivkey->dq,d,qminus);
+    mpz_mod(pprivkey->dp,pprivkey->d,pminus);
+    mpz_mod(pprivkey->dq,pprivkey->d,qminus);
 
     /* zp = q^(p-1) mod n, zq = p^(q-1) mod n */
     mpz_powm(pprivkey->zp,pprivkey->q,pminus,n);
@@ -284,7 +284,6 @@ closure:
     mpz_clear(qminus);
     mpz_clear(z);
     mpz_clear(gcd);
-    mpz_clear(d);
     return retval;
 
 
@@ -309,17 +308,19 @@ void rsa_cleanup_privkey(PPRIVKEY_EX pprivkey){
 }
 
 int 
-rsa_encryptdata_ex(mpz_t* raw,mpz_t* ciphered,PPUBKEY_EX ppubkey){
+rsa_encryptdata_ex(mpz_t rop,mpz_t raw,PPUBKEY_EX ppubkey){
     mpz_t n;
     mpz_init(n);
     mpz_mul(n,ppubkey->p,ppubkey->q);
-    mpz_powm(*ciphered,*raw,ppubkey->e,n);
+    mpz_powm(rop,raw,ppubkey->e,n);
     mpz_clear(n);
     return 0;
 }
 
 int 
-rsa_decrypdata_ex(mpz_t* ciphered,mpz_t* output,PPRIVKEY_EX pprivkey){
+rsa_decrypdata_ex(mpz_t rop,mpz_t ciphered,PPRIVKEY_EX pprivkey){
+
+#ifdef USING_DECIPHER_CRT
     mpz_t cp;
     mpz_t cq;
     mpz_t pp;
@@ -342,8 +343,8 @@ rsa_decrypdata_ex(mpz_t* ciphered,mpz_t* output,PPRIVKEY_EX pprivkey){
     mpz_init(n);
     mpz_init(spsq);
 
-    mpz_mod(cp,*ciphered,pprivkey->p);
-    mpz_mod(cq,*ciphered,pprivkey->q);
+    mpz_mod(cp,ciphered,pprivkey->p);
+    mpz_mod(cq,ciphered,pprivkey->q);
     mpz_powm(pp,cp,pprivkey->dp,pprivkey->p);
     mpz_powm(pq,cq,pprivkey->dq,pprivkey->p);
     mpz_mul(ppzp,pp,pprivkey->zp);
@@ -353,9 +354,9 @@ rsa_decrypdata_ex(mpz_t* ciphered,mpz_t* output,PPRIVKEY_EX pprivkey){
     mpz_mod(sq,pqzq,n);
     mpz_add(spsq,sp,sq);
     if(mpz_cmp(spsq,n) >= 0)
-        mpz_sub(*output,spsq,n);
+        mpz_sub(rop,spsq,n);
     else
-        mpz_set(*output,spsq);
+        mpz_set(rop,spsq);
     mpz_clear(spsq);
     mpz_clear(n);
     mpz_clear(cp);
@@ -366,6 +367,14 @@ rsa_decrypdata_ex(mpz_t* ciphered,mpz_t* output,PPRIVKEY_EX pprivkey){
     mpz_clear(sq);
     mpz_clear(ppzp);
     mpz_clear(pqzq);
+#endif
 
+#ifdef USING_GENERIC_RSADECIPHER
+    mpz_t n;
+    mpz_init(n);
+    mpz_mul(n,pprivkey->p,pprivkey->q);
+    mpz_powm(rop,ciphered,pprivkey->d,n);
+    mpz_clear(n);
+#endif
     return 0;
 }
