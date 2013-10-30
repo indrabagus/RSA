@@ -301,6 +301,7 @@ rsa_cleanup_pubkey(PPUBKEY_EX ppubkey){
 void rsa_cleanup_privkey(PPRIVKEY_EX pprivkey){
     mpz_clear(pprivkey->p);
     mpz_clear(pprivkey->q);
+    mpz_clear(pprivkey->d);
     mpz_clear(pprivkey->dp);
     mpz_clear(pprivkey->dq);
     mpz_clear(pprivkey->zp);
