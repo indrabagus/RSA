@@ -260,8 +260,7 @@ rsa_createkey_ex(PPUBKEY_EX ppubkey,PPRIVKEY_EX pprivkey){
     */
     if(mpz_invert(pprivkey->d,ppubkey->e,z) == 0){
         /* cannot find d (multiplicative inverse) */
-        rsa_cleanup_pubkey(ppubkey);
-        rsa_cleanup_privkey(pprivkey);
+        rsa_cleanup_key(ppubkey,pprivkey);
         retval = -1;
         goto closure;
     }
@@ -289,16 +288,12 @@ closure:
 
 }
 
-void
-rsa_cleanup_pubkey(PPUBKEY_EX ppubkey){
+
+void 
+rsa_cleanup_key(PPUBKEY_EX ppubkey,PPRIVKEY_EX pprivkey){
     mpz_clear(ppubkey->p);
     mpz_clear(ppubkey->q);
     mpz_clear(ppubkey->e);
-}
-
-
-
-void rsa_cleanup_privkey(PPRIVKEY_EX pprivkey){
     mpz_clear(pprivkey->p);
     mpz_clear(pprivkey->q);
     mpz_clear(pprivkey->d);
@@ -306,6 +301,7 @@ void rsa_cleanup_privkey(PPRIVKEY_EX pprivkey){
     mpz_clear(pprivkey->dq);
     mpz_clear(pprivkey->zp);
     mpz_clear(pprivkey->zq);
+
 }
 
 int 

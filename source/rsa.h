@@ -61,8 +61,7 @@ void rsa_encryptdata(const void* pdata, unsigned long length,void* pbuffer,PRSAP
 int rsa_decryptdata(const void* pdata,unsigned long length,void* pbuffer,PRSAPRIVKEY pprivkey);
 
 int rsa_createkey_ex(PPUBKEY_EX ppubkey,PPRIVKEY_EX pprivkey);
-void rsa_cleanup_pubkey(PPUBKEY_EX ppubkey);
-void rsa_cleanup_privkey(PPRIVKEY_EX pprivkey);
+void rsa_cleanup_key(PPUBKEY_EX ppubkey,PPRIVKEY_EX pprivkey);
 int rsa_encryptdata_ex(mpz_t rop,mpz_t raw,PPUBKEY_EX ppubkey);
 int rsa_decrypdata_ex(mpz_t rop,mpz_t ciphered,PPRIVKEY_EX pprivkey);
 

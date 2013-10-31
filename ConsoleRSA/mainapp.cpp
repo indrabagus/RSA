@@ -195,8 +195,7 @@ cipherdecipher(void){
     mpz_clear(ciphertext);
     mpz_clear(dataout);
     mpz_clear(m);
-    rsa_cleanup_pubkey(&rsapublic);
-    rsa_cleanup_privkey(&rsaprivkey);
+    rsa_cleanup_key(&rsapublic,&rsaprivkey);
 }
 
 int main(void)
