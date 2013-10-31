@@ -370,6 +370,46 @@ rsa_decrypdata_ex(mpz_t rop,mpz_t ciphered,PPRIVKEY_EX pprivkey){
     mpz_clear(pqzq);
 #endif
 
+#ifdef USING_DECIPHER_CRT2
+    mpz_t qinv;
+    mpz_t m1;
+    mpz_t m2;
+    mpz_t m1_m2;
+    mpz_t qinvm1_m2;
+    mpz_t h;
+    mpz_t hq;
+    mpz_init(qinv);
+    mpz_init(m1);
+    mpz_init(m2);
+    mpz_init(m1_m2);
+    mpz_init(qinvm1_m2);
+    mpz_init(h);
+    mpz_init(hq);
+    /* which result qinv=q^(-1) mod p */
+    mpz_invert(qinv,pprivkey->q,pprivkey->p);
+    mpz_powm(m1,ciphered,pprivkey->dp,pprivkey->p);
+    mpz_powm(m2,ciphered,pprivkey->dq,pprivkey->q);
+    mpz_sub(m1_m2,m1,m2);
+    if(mpz_sgn(m1_m2) == -1)
+        mpz_add(m1_m2,m1_m2,pprivkey->p);
+
+    mpz_mul(qinvm1_m2,qinv,m1_m2);
+    mpz_mod(h,qinvm1_m2,pprivkey->p);
+    mpz_mul(hq,h,pprivkey->q);
+    mpz_add(rop,m2,hq);
+
+    mpz_clear(qinv);
+    mpz_clear(m1);
+    mpz_clear(m2);
+    mpz_clear(m1_m2);
+    mpz_clear(qinvm1_m2);
+    mpz_clear(h);
+    mpz_clear(hq);
+    
+#endif
+
+
+
 #ifdef USING_GENERIC_RSADECIPHER
     mpz_t n;
     mpz_init(n);

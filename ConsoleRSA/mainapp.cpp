@@ -13,8 +13,6 @@ static rsakey_t rsakey;
 
 //static const char* strdatain = "Indra Bagus Wicaksono <indra@xirkachipset.com>";
 
-static char strdatain[] = {0xd1,0xd2,0xd3,0xd4,0xd5,0xd6};
-
 static char bufferdataout[BITSTRENGTH*4];
 static char bufferdecrypt[BITSTRENGTH*4];
 static std::string szrandomdatain;
@@ -69,6 +67,7 @@ std::string generaterandomdata(int bitlength)
     mpz_clear(hrandom);
     return retval;
 }
+
 
 
 
@@ -142,30 +141,60 @@ cipherdecipher(void){
     mpz_t datain;
     mpz_t ciphertext;
     mpz_t dataout;
+    mpz_t m;
     int retval;
     unsigned char* szp;
+    gmp_randstate_t hrandstate;
 
     mpz_init(datain);
     mpz_init(ciphertext);
     mpz_init(dataout);
+    mpz_init(m);
+
+
+
+    /* generate key */
+    std::cout<<"Generating key..."<<std::endl;
     do{
         retval = rsa_createkey_ex(&rsapublic,&rsaprivkey);
     }while(retval != 0);
+    /* pastikan data input valid */
+    mpz_mul(m,rsaprivkey.p,rsaprivkey.q);
+
+    
+    /* generate random input dengan syarat input > (p*q) */
+    std::cout<<"Generating "<<BITSTRENGTH<<" bit input..."<<std::endl<<std::endl;
+    do{
+        gmp_randinit_default(hrandstate);
+        gmp_randseed_ui(hrandstate,GetTickCount());
+        mpz_urandomb(datain,hrandstate,BITSTRENGTH);
+    }while(mpz_cmp(m,datain) <= 0);
+
+
     size_t sizelen = mpz_sizeinbase(rsapublic.p,16);
     szp = new unsigned char[(sizelen*3)+2];
     mpz_get_str((char*)szp,16,rsapublic.p);
-    std::cout<<szp<<std::endl<<std::endl;
-    mpz_import(datain,sizeof(strdatain),1,1,0,0,strdatain);
+    std::cout<<"[KEY P]"<<std::endl<<szp<<std::endl<<std::endl;
+    mpz_get_str((char*)szp,16,rsapublic.q);
+    std::cout<<"[KEY Q]"<<std::endl<<szp<<std::endl<<std::endl;
     rsa_encryptdata_ex(ciphertext,datain,&rsapublic);
+    mpz_get_str((char*)szp,16,ciphertext);
+    std::cout<<"[CIPHERED TEXT]"<<std::endl<<szp<<std::endl<<std::endl;
     rsa_decrypdata_ex(dataout,ciphertext,&rsaprivkey);
-    //mpz_export(szp,&sizelen,1,1,0,0,dataout);
     mpz_get_str((char*)szp,16,dataout);
 
-    std::cout<<szp<<std::endl<<std::endl;
+    std::cout<<"[DECIPHERED TEXT]"<<std::endl<<szp<<std::endl<<std::endl;
+    if(mpz_cmp(datain,dataout) != 0){
+        std::cout<<"Encrypt Decrypt: F.A.I.L.E.D"<<std::endl;
+    }
+    else{
+        std::cout<<"Encrypt Decrypt: S.U.C.C.E.E.S"<<std::endl;
+    }
     delete[] szp;
     mpz_clear(datain);
     mpz_clear(ciphertext);
     mpz_clear(dataout);
+    mpz_clear(m);
     rsa_cleanup_pubkey(&rsapublic);
     rsa_cleanup_privkey(&rsaprivkey);
 }

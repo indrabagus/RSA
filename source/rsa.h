@@ -12,13 +12,14 @@ authors        : Indra Bagus Wicaksono <indra.bagus@gmail.com>
 #define RSA_H
 #include <mpir.h>
 
-#define USING_DECIPHER_CRT
+//#define USING_DECIPHER_CRT
+#define USING_DECIPHER_CRT2
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define BITSTRENGTH (2*1024)
+#define BITSTRENGTH (8*1024)
 
 typedef struct rsapubkey{
     char strkey_n[BITSTRENGTH];
