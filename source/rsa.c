@@ -347,7 +347,7 @@ rsa_decrypdata_ex(mpz_t rop,mpz_t ciphered,PPRIVKEY_EX pprivkey){
     mpz_mod(cp,ciphered,pprivkey->p);
     mpz_mod(cq,ciphered,pprivkey->q);
     mpz_powm(pp,cp,pprivkey->dp,pprivkey->p);
-    mpz_powm(pq,cq,pprivkey->dq,pprivkey->p);
+    mpz_powm(pq,cq,pprivkey->dq,pprivkey->q);
     mpz_mul(ppzp,pp,pprivkey->zp);
     mpz_mul(pqzq,pq,pprivkey->zq);
     mpz_mul(n,pprivkey->p,pprivkey->q);

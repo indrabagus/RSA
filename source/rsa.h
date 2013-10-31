@@ -12,8 +12,8 @@ authors        : Indra Bagus Wicaksono <indra.bagus@gmail.com>
 #define RSA_H
 #include <mpir.h>
 
-//#define USING_DECIPHER_CRT
-#define USING_DECIPHER_CRT2
+#define USING_DECIPHER_CRT
+//#define USING_DECIPHER_CRT2
 
 #ifdef __cplusplus
 extern "C" {
