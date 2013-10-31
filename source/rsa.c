@@ -354,10 +354,7 @@ rsa_decrypdata_ex(mpz_t rop,mpz_t ciphered,PPRIVKEY_EX pprivkey){
     mpz_mod(sp,ppzp,n);
     mpz_mod(sq,pqzq,n);
     mpz_add(spsq,sp,sq);
-    if(mpz_cmp(spsq,n) >= 0)
-        mpz_sub(rop,spsq,n);
-    else
-        mpz_set(rop,spsq);
+    mpz_mod(rop,spsq,n);
     mpz_clear(spsq);
     mpz_clear(n);
     mpz_clear(cp);
