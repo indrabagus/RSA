@@ -1,4 +1,4 @@
 RSA
 ===
 
-Implementasi asymetric security menggunakan algorithma RSA
+Implementasi asymetric cryptograhy algorithma RSA menggunakan library MPIR (http://mpir.org)
