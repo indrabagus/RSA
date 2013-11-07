@@ -174,9 +174,20 @@ cipherdecipher(void){
     size_t sizelen = mpz_sizeinbase(rsapublic.p,16);
     szp = new unsigned char[(sizelen*3)+2];
     mpz_get_str((char*)szp,16,rsapublic.p);
-    std::cout<<"[KEY P]"<<std::endl<<szp<<std::endl<<std::endl;
+    std::cout<<"[KEY P, size = "<<mpz_size(rsapublic.p)*sizeof(mp_limb_t)<<" Byte ]"<<std::endl<<szp<<std::endl<<std::endl;
     mpz_get_str((char*)szp,16,rsapublic.q);
-    std::cout<<"[KEY Q]"<<std::endl<<szp<<std::endl<<std::endl;
+    std::cout<<"[KEY Q, size = "<<mpz_size(rsapublic.p)*sizeof(mp_limb_t)<<" Byte ]"<<std::endl<<szp<<std::endl<<std::endl;
+    mpz_get_str((char*)szp,16,rsaprivkey.d);
+    std::cout<<"[PARAM D, size = "<<mpz_size(rsaprivkey.d)*sizeof(mp_limb_t)<<" Byte ]"<<std::endl<<szp<<std::endl<<std::endl;
+    mpz_get_str((char*)szp,16,rsaprivkey.dp);
+    std::cout<<"[PARAM Dp, size = "<<mpz_size(rsaprivkey.dp)*sizeof(mp_limb_t)<<" Byte ]"<<std::endl<<szp<<std::endl<<std::endl;
+    mpz_get_str((char*)szp,16,rsaprivkey.dq);
+    std::cout<<"[PARAM Dq, size = "<<mpz_size(rsaprivkey.dq)*sizeof(mp_limb_t)<<" Byte ]"<<std::endl<<szp<<std::endl<<std::endl;
+    mpz_get_str((char*)szp,16,rsaprivkey.zp);
+    std::cout<<"[PARAM Zp, size = "<<mpz_size(rsaprivkey.zp)*sizeof(mp_limb_t)<<" Byte ]"<<std::endl<<szp<<std::endl<<std::endl;
+    mpz_get_str((char*)szp,16,rsaprivkey.zq);
+    std::cout<<"[PARAM Zq, size = "<<mpz_size(rsaprivkey.zq)*sizeof(mp_limb_t)<<" Byte ]"<<std::endl<<szp<<std::endl<<std::endl;
+
     rsa_encryptdata_ex(ciphertext,datain,&rsapublic);
     mpz_get_str((char*)szp,16,ciphertext);
     std::cout<<"[CIPHERED TEXT]"<<std::endl<<szp<<std::endl<<std::endl;
