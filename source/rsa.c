@@ -209,6 +209,7 @@ rsa_createkey_ex(PPUBKEY_EX ppubkey,PPRIVKEY_EX pprivkey){
     mpz_t qminus;
     mpz_t z;
     mpz_t gcd;
+    mpz_t dua; // untuk menghitung R2P,R2Q dan R2N
     //mpz_t d;
     unsigned long int k_int = 65537;
     /* inisialisasi semuanya */
@@ -218,6 +219,7 @@ rsa_createkey_ex(PPUBKEY_EX ppubkey,PPRIVKEY_EX pprivkey){
     mpz_init(qminus);
     mpz_init(z);
     mpz_init(gcd);
+    mpz_init(dua);
     mpz_init(ppubkey->p);
     mpz_init(ppubkey->q);
     mpz_init(ppubkey->e);
@@ -228,6 +230,11 @@ rsa_createkey_ex(PPUBKEY_EX ppubkey,PPRIVKEY_EX pprivkey){
     mpz_init(pprivkey->dq);
     mpz_init(pprivkey->zp);
     mpz_init(pprivkey->zq);
+    mpz_init(pprivkey->r2p);
+    mpz_init(pprivkey->r2q);
+    mpz_init(pprivkey->r2n);
+    mpz_init(pprivkey->r2modp);
+    mpz_init(pprivkey->r2modq);
 
     /* inisialisasi randomizer */
     gmp_randseed_ui(hrandstate,GetTickCount());
@@ -272,6 +279,17 @@ rsa_createkey_ex(PPUBKEY_EX ppubkey,PPRIVKEY_EX pprivkey){
     mpz_powm(pprivkey->zp,pprivkey->q,pminus,n);
     mpz_powm(pprivkey->zq,pprivkey->p,qminus,n);
 
+    /*  R2P = 2^(Jml bit P + 2 ) mod q */
+    mpz_set_ui(dua,2);
+    mpz_powm_ui(pprivkey->r2p,dua,(PRIMESIZE+2),pprivkey->p);
+    /*  R2Q = 2^(Jml bit Q + 2 ) mod q */
+    mpz_powm_ui(pprivkey->r2q,dua,(PRIMESIZE+2),pprivkey->q);
+    /*  R2N = 2^(Jml bit N + 2 ) mod n */
+    mpz_powm_ui(pprivkey->r2n,dua,(BITSTRENGTH+2),n);
+    /* R2MODP = 2^(jml key size + 2) mod P */
+    mpz_powm_ui(pprivkey->r2modp,dua,(BITSTRENGTH+2),pprivkey->p);
+    /* R2MODQ = 2^(jml key size + 2) mod Q */
+    mpz_powm_ui(pprivkey->r2modq,dua,(BITSTRENGTH+2),pprivkey->q);
     retval = 0;
     goto closure;
 
@@ -283,6 +301,7 @@ closure:
     mpz_clear(qminus);
     mpz_clear(z);
     mpz_clear(gcd);
+    mpz_clear(dua);
     return retval;
 
 
@@ -301,6 +320,11 @@ rsa_cleanup_key(PPUBKEY_EX ppubkey,PPRIVKEY_EX pprivkey){
     mpz_clear(pprivkey->dq);
     mpz_clear(pprivkey->zp);
     mpz_clear(pprivkey->zq);
+    mpz_clear(pprivkey->r2p);
+    mpz_clear(pprivkey->r2q);
+    mpz_clear(pprivkey->r2n);
+    mpz_clear(pprivkey->r2modp);
+    mpz_clear(pprivkey->r2modq);
 
 }
 
