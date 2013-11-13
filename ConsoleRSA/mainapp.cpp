@@ -1,4 +1,5 @@
 #include <iostream>
+#include <sstream>
 #include <cassert>
 #include <rsa.h>
 #include <gmp.h>
@@ -135,9 +136,13 @@ static int gentestvector(int numvector){
     return 0;
 }
 
+static int savefile(const char* filename,const mpz_t mp)
+{
+    std::ofstream ofs(filename,std::ios_base::app|std::ios_base::out);
 
-void
-cipherdecipher(void){
+}
+
+void cipherdecipher(void){
     mpz_t datain;
     mpz_t ciphertext;
     mpz_t dataout;
@@ -171,26 +176,49 @@ cipherdecipher(void){
     }while(mpz_cmp(m,datain) <= 0);
 
 
-    size_t sizelen = mpz_sizeinbase(rsapublic.p,16);
-    szp = new unsigned char[(sizelen*3)+2];
+    size_t sizelen = mpz_sizeinbase(rsaprivkey.d,16);
+    std::stringstream strstream;
+    std::ofstream ofs("rsakey.txt",std::ios_base::app|std::ios_base::out);
+    szp = new unsigned char[(sizelen*2)+2];
+    mpz_get_str((char*)szp,16,datain);
+    strstream<<"[DATA INPUT, size = "<<mpz_size(datain)*sizeof(mp_limb_t)<<" Byte ]"<<std::endl<<szp<<std::endl<<std::endl;
+
     mpz_get_str((char*)szp,16,rsapublic.p);
-    std::cout<<"[KEY P, size = "<<mpz_size(rsapublic.p)*sizeof(mp_limb_t)<<" Byte ]"<<std::endl<<szp<<std::endl<<std::endl;
+    strstream<<"[PARAMETER P, size = "<<mpz_size(rsapublic.p)*sizeof(mp_limb_t)<<" Byte ]"<<std::endl<<szp<<std::endl<<std::endl;
+    
+    //std::cout<<"[KEY P, size = "<<mpz_size(rsapublic.p)*sizeof(mp_limb_t)<<" Byte ]"<<std::endl<<szp<<std::endl<<std::endl;
     mpz_get_str((char*)szp,16,rsapublic.q);
-    std::cout<<"[KEY Q, size = "<<mpz_size(rsapublic.p)*sizeof(mp_limb_t)<<" Byte ]"<<std::endl<<szp<<std::endl<<std::endl;
+    strstream<<"[PARAMETER Q, size = "<<mpz_size(rsapublic.p)*sizeof(mp_limb_t)<<" Byte ]"<<std::endl<<szp<<std::endl<<std::endl;
+    mpz_get_str((char*)szp,16,rsapublic.e);
+    strstream<<"[PARAMETER E, size = "<<mpz_size(rsapublic.e)*sizeof(mp_limb_t)<<" Byte ]"<<std::endl<<szp<<std::endl<<std::endl;
     mpz_get_str((char*)szp,16,rsaprivkey.d);
-    std::cout<<"[PARAM D, size = "<<mpz_size(rsaprivkey.d)*sizeof(mp_limb_t)<<" Byte ]"<<std::endl<<szp<<std::endl<<std::endl;
+    strstream<<"[PARAMETER D, size = "<<mpz_size(rsaprivkey.d)*sizeof(mp_limb_t)<<" Byte ]"<<std::endl<<szp<<std::endl<<std::endl;
     mpz_get_str((char*)szp,16,rsaprivkey.dp);
-    std::cout<<"[PARAM Dp, size = "<<mpz_size(rsaprivkey.dp)*sizeof(mp_limb_t)<<" Byte ]"<<std::endl<<szp<<std::endl<<std::endl;
+    strstream<<"[PARAMETER Dp, size = "<<mpz_size(rsaprivkey.dp)*sizeof(mp_limb_t)<<" Byte ]"<<std::endl<<szp<<std::endl<<std::endl;
     mpz_get_str((char*)szp,16,rsaprivkey.dq);
-    std::cout<<"[PARAM Dq, size = "<<mpz_size(rsaprivkey.dq)*sizeof(mp_limb_t)<<" Byte ]"<<std::endl<<szp<<std::endl<<std::endl;
+    strstream<<"[PARAMETER Dq, size = "<<mpz_size(rsaprivkey.dq)*sizeof(mp_limb_t)<<" Byte ]"<<std::endl<<szp<<std::endl<<std::endl;
     mpz_get_str((char*)szp,16,rsaprivkey.zp);
-    std::cout<<"[PARAM Zp, size = "<<mpz_size(rsaprivkey.zp)*sizeof(mp_limb_t)<<" Byte ]"<<std::endl<<szp<<std::endl<<std::endl;
+    strstream<<"[PARAMETER Zp, size = "<<mpz_size(rsaprivkey.zp)*sizeof(mp_limb_t)<<" Byte ]"<<std::endl<<szp<<std::endl<<std::endl;
     mpz_get_str((char*)szp,16,rsaprivkey.zq);
-    std::cout<<"[PARAM Zq, size = "<<mpz_size(rsaprivkey.zq)*sizeof(mp_limb_t)<<" Byte ]"<<std::endl<<szp<<std::endl<<std::endl;
+    strstream<<"[PARAMETER Zq, size = "<<mpz_size(rsaprivkey.zq)*sizeof(mp_limb_t)<<" Byte ]"<<std::endl<<szp<<std::endl<<std::endl;
+    mpz_get_str((char*)szp,16,rsaprivkey.r2p);
+    strstream<<"[PARAMETER R2P, size = "<<mpz_size(rsaprivkey.r2p)*sizeof(mp_limb_t)<<" Byte ]"<<std::endl<<szp<<std::endl<<std::endl;
+    mpz_get_str((char*)szp,16,rsaprivkey.r2q);
+    strstream<<"[PARAMETER R2Q, size = "<<mpz_size(rsaprivkey.r2q)*sizeof(mp_limb_t)<<" Byte ]"<<std::endl<<szp<<std::endl<<std::endl;
+    mpz_get_str((char*)szp,16,rsaprivkey.r2n);
+    strstream<<"[PARAMETER R2N, size = "<<mpz_size(rsaprivkey.r2n)*sizeof(mp_limb_t)<<" Byte ]"<<std::endl<<szp<<std::endl<<std::endl;
+    mpz_get_str((char*)szp,16,rsaprivkey.r2modp);
+    strstream<<"[PARAMETER R2MODP, size = "<<mpz_size(rsaprivkey.r2modp)*sizeof(mp_limb_t)<<" Byte ]"<<std::endl<<szp<<std::endl<<std::endl;
+    mpz_get_str((char*)szp,16,rsaprivkey.r2modq);
+    strstream<<"[PARAMETER R2MODQ, size = "<<mpz_size(rsaprivkey.r2modq)*sizeof(mp_limb_t)<<" Byte ]"<<std::endl<<szp<<std::endl<<std::endl;
 
     rsa_encryptdata_ex(ciphertext,datain,&rsapublic);
     mpz_get_str((char*)szp,16,ciphertext);
-    std::cout<<"[CIPHERED TEXT]"<<std::endl<<szp<<std::endl<<std::endl;
+    strstream<<"[CIPHERED TEXT, size = "<<mpz_size(ciphertext)*sizeof(mp_limb_t)<<" Byte ]"<<std::endl<<szp<<std::endl<<std::endl;
+    strstream<<"======================================================"<<std::endl<<std::endl;
+    std::cout<<strstream.str();
+    ofs<<strstream.rdbuf();
+
     rsa_decrypdata_ex(dataout,ciphertext,&rsaprivkey);
     mpz_get_str((char*)szp,16,dataout);
 
